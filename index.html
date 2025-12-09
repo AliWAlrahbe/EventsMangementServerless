@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Announcements</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="page">
+        <header class="hero">
+            <div class="hero__content">
+                <p class="eyebrow">Live events feed</p>
+                <h1>Event Announcements</h1>
+                <p>Stay tuned for the latest events and announcements!</p>
+                <div class="actions">
+                    <button class="btn primary" onclick="subscribeToEvents()">Subscribe</button>
+                    <button class="btn ghost" onclick="showCreateEventForm()">Create event</button>
+                </div>
+            </div>
+            <div class="hero__meta">
+                <div class="stat">
+                    <span class="label">Auto updates</span>
+                    <span class="value">Live feed</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Stay ahead</span>
+                    <span class="value">New drops weekly</span>
+                </div>
+            </div>
+        </header>
+
+        <section id="events-container" class="card">
+            <div class="section-header">
+                <div>
+                    <p class="eyebrow">What’s happening</p>
+                    <h2>Latest Events</h2>
+                </div>
+                <button class="btn accent" onclick="loadEvents()">Refresh</button>
+            </div>
+            <ul id="events-list" class="event-grid"></ul>
+            <div class="cta">
+                <button class="btn ghost" onclick="showCreateEventForm()">Create a new event</button>
+            </div>
+        </section>
+
+        <!-- Password gate for create event -->
+        <section id="password-gate" class="card hidden" style="display:none;">
+            <div class="section-header">
+                <p class="eyebrow">Restricted</p>
+                <h3>Enter password to create an event</h3>
+            </div>
+            <form onsubmit="verifyPassword(event)" class="stacked-form">
+                <label for="password-input">Password</label>
+                <input type="password" id="password-input" placeholder="Enter password to continue" required>
+                <p id="password-error" style="color: #ffb3b3; min-height: 18px;"></p>
+                <div class="actions">
+                    <button type="submit" class="btn primary">Continue</button>
+                    <button type="button" class="btn ghost" onclick="hidePasswordGate()">Cancel</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Create Event Form Section -->
+        <section id="create-event-form" class="card hidden" style="display:none;">
+            <div class="section-header">
+                <p class="eyebrow">Share something new</p>
+                <h3>Create New Event</h3>
+            </div>
+            <form onsubmit="submitNewEvent(event)" class="stacked-form">
+                <label for="event-title">Title</label>
+                <input type="text" id="event-title" placeholder="Product launch, Meetup, Workshop..." required>
+                <label for="event-date">Date</label>
+                <input type="date" id="event-date" required>
+                <label for="event-description">Description</label>
+                <textarea id="event-description" placeholder="Tell people what to expect" required></textarea>
+                <button type="submit" class="btn primary">Submit event</button>
+            </form>
+        </section>
+
+        <footer class="footer">
+            <p>Subscribe to get notified about new events.</p>
+        </footer>
+
+        <script>
+            // Function to load events from local events.json
+            const API_BASE = "REPLACE_WITH_API_BASE_URL";
+            const SUBSCRIBE_PATH = "REPLACE_WITH_SUBSCRIBE_PATH";
+            const CREATE_EVENT_PATH = "REPLACE_WITH_CREATE_EVENT_PATH";
+            const pass = "12345";
+            async function loadEvents() {
+                try {
+                    const response = await fetch('events.json');
+                    if (response.ok) {
+                        const events = await response.json();
+                        displayEvents(events);
+                    } else {
+                        console.error("Could not load events.");
+                    }
+                } catch (error) {
+                    console.error("Error fetching events:", error);
+                }
+            }
+
+            // Function to display events on the page
+            function displayEvents(events) {
+                const eventsList = document.getElementById('events-list');
+                eventsList.innerHTML = ''; // Clear current events
+                events.forEach(event => {
+                    const listItem = document.createElement('li');
+                    listItem.className = "event-card";
+                    listItem.innerHTML = `
+                        <div class="event-head">
+                            <span class="event-date">${event.date}</span>
+                            <span class="pill">Live</span>
+                        </div>
+                        <h3>${event.title}</h3>
+                        <p>${event.description}</p>
+                    `;
+                    eventsList.appendChild(listItem);
+                });
+            }
+
+            // Function to show the password prompt before the create event form
+            function showCreateEventForm() {
+                const gate = document.getElementById("password-gate");
+                const form = document.getElementById("create-event-form");
+                const input = document.getElementById("password-input");
+                const error = document.getElementById("password-error");
+
+                form.style.display = "none";
+                gate.style.display = "block";
+                if (input) {
+                    input.value = "";
+                    input.focus();
+                }
+                if (error) {
+                    error.textContent = "";
+                }
+            }
+
+            function hidePasswordGate() {
+                document.getElementById("password-gate").style.display = "none";
+            }
+
+            function verifyPassword(event) {
+                event.preventDefault();
+
+                const input = document.getElementById("password-input");
+                const error = document.getElementById("password-error");
+                const provided = input ? input.value.trim() : "";
+
+                if (provided === pass) {
+                    if (error) {
+                        error.textContent = "";
+                    }
+                    document.getElementById("password-gate").style.display = "none";
+                    document.getElementById("create-event-form").style.display = "block";
+                } else if (error) {
+                    error.textContent = "Incorrect password. Please try again.";
+                }
+            }
+
+            // Handle event form submission
+            async function submitNewEvent(event) {
+                event.preventDefault();
+
+                const title = document.getElementById("event-title").value;
+                const date = document.getElementById("event-date").value;
+                const description = document.getElementById("event-description").value;
+
+                const newEvent = {
+                    title: title,
+                    date: date,
+                    description: description
+                };
+
+                try {
+                    const response = await fetch(`${API_BASE}/${CREATE_EVENT_PATH}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newEvent)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alert("New event created successfully!");
+                        loadEvents();  // Reload events after creating a new one
+                    } else {
+                        alert("Failed to create new event.");
+                        console.error(result);
+                    }
+                } catch (error) {
+                    alert("Error creating new event. Please try again.");
+                    console.error("Error:", error);
+                }
+            }
+
+            // Subscribe function to integrate with API Gateway and Lambda for SNS subscription
+            async function subscribeToEvents() {
+                const email = prompt("Enter your email to subscribe to event notifications:");
+                if (!email) {
+                    alert("Email is required for subscription.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE}/${SUBSCRIBE_PATH}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email })
+                    });
+
+                    const data = await response.json();
+                    console.log("Subscribe API Response:", data);
+
+                    let message = null;
+
+                    // If Lambda returns the traditional shape (statusCode + body string)
+                    if (data.body) {
+                        try {
+                            const parsedBody = JSON.parse(data.body);
+                            message = parsedBody.message || null;
+                        } catch (e) {
+                            console.error("Failed to parse inner body:", e);
+                        }
+                    // If proxy integration is enabled and returns directly { message: ... }
+                    } else if (data.message) {
+                        message = data.message;
+                    }
+
+                    if (response.ok && message) {
+                        alert(message);
+                    } else {
+                        alert("Subscription failed. Please try again.");
+                        console.error(data);
+                    }
+                } catch (error) {
+                    alert("Error subscribing to events. Please try again later.");
+                    console.error("Error:", error);
+                }
+            }
+
+            // Load events on page load
+            window.onload = loadEvents;
+        </script>
+    </div>
+</body>
+
+</html>

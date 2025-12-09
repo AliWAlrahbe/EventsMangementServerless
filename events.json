@@ -1,0 +1,22 @@
+[
+  {
+    "title": "AI Product Jam",
+    "date": "2024-12-12",
+    "description": "Build and pitch an AI-powered feature in 3 hours with live coaching."
+  },
+  {
+    "title": "Next-Gen Frontend",
+    "date": "2025-01-08",
+    "description": "Hands-on session exploring modern UI patterns, motion, and accessibility."
+  },
+  {
+    "title": "Cloud Cost Tuning",
+    "date": "2025-01-22",
+    "description": "Practical strategies to trim cloud bills with monitoring and right-sizing."
+  },
+  {
+    "title": "Community Showcase",
+    "date": "2025-02-05",
+    "description": "Lightning talks from the community—share what you’ve shipped recently."
+  }
+]
